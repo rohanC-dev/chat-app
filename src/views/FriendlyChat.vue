@@ -92,44 +92,17 @@
         </div>
         <div class="mesgs">
           <div class="msg_history">
-            <div class="incoming_msg">
-              <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+            <div v-for="message in messages" :key="message.id" class="incoming_msg">
               <div class="received_msg">
                 <div class="received_withd_msg">
-                  <p>Test which is a new approach to have all
-                    solutions</p>
-                  <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                  <p>{{message.message}}</p>
+                  <span class="time_date"> {{message.author}}</span></div>
               </div>
             </div>
-            <div class="outgoing_msg">
-              <div class="sent_msg">
-                <p>Test which is a new approach to have all
-                  solutions</p>
-                <span class="time_date"> 11:01 AM    |    June 9</span> </div>
-            </div>
-            <div class="incoming_msg">
-              <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-              <div class="received_msg">
-                <div class="received_withd_msg">
-                  <p>Test, which is a new approach to have</p>
-                  <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
-              </div>
-            </div>
-            <div class="outgoing_msg">
-              <div class="sent_msg">
-                <p>Apollo University, Delhi, India Test</p>
-                <span class="time_date"> 11:01 AM    |    Today</span> </div>
-            </div>
-            <div class="incoming_msg">
-              <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-              <div class="received_msg">
-                <div class="received_withd_msg">
-                  <p>We work directly with our designers and suppliers,
-                    and sell direct to you, which means quality, exclusive
-                    products, at a price anyone can afford.</p>
-                  <span class="time_date"> 11:01 AM    |    Today</span></div>
-              </div>
-            </div>
+            
+            
+            
+            
           </div>
           <div class="type_msg">
             <div class="input_msg_write">
@@ -149,10 +122,60 @@
 
 <script>
 
-
+import firebase from 'firebase'
 export default {
-  components: {
+name: 'FriendlyChat',
+  data(){
+      return{
+          message: null,
+          messages: [],
+          authUser: {}
+      }
+  },
+  methods:{
+      saveMessage(){
+          db.collection("messages").add({
+              message: this.message,
+              author: this.authUser.displayName,
+              creationDate: new Date()
+          })
+          this.message = null;
+      },
+      fetchMessages(){
+        db.collection("messages").orderBy("creationDate").onSnapshot((querySnapshot) => {
+            let allMessages=[];
+            querySnapshot.forEach(doc => {
+                allMessages.push(doc.data());
+                console.log(allMessages);
+            })
+            this.messages=allMessages;
+        })
+    }
+    
+  },
+    
+  created(){
+      firebase.auth().onAuthStateChanged(user=>{
+          if(user){
+              this.authUser=user;
+          }else{
+              this.authUser={};
+          }
+      })
+      this.fetchMessages();
+  },
 
+
+  beforeRouteEnter(to, from, next){
+      next(vm=>{
+          firebase.auth().onAuthStateChanged(user=>{
+              if(user){
+                  next();
+              }else{
+                  vm.$router.push("/login");
+              }
+          })
+      })
   }
 }
 </script>
