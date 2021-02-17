@@ -92,12 +92,11 @@
         </div>
         <div class="mesgs">
           <div class="msg_history">
-            <div v-for="message in messages" class="incoming_msg">
-              <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+            <div v-for="message in messages" :key="message.id" class="incoming_msg">
               <div class="received_msg">
                 <div class="received_withd_msg">
                   <p>{{message.message}}</p>
-                  <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                  <span class="time_date"> {{message.author}}</span></div>
               </div>
             </div>
             
@@ -123,34 +122,60 @@
 
 <script>
 
-
+import firebase from 'firebase'
 export default {
 name: 'FriendlyChat',
   data(){
       return{
-          message: null
+          message: null,
+          messages: [],
+          authUser: {}
       }
   },
   methods:{
       saveMessage(){
           db.collection("messages").add({
-              message: this.message
+              message: this.message,
+              author: this.authUser.displayName,
+              creationDate: new Date()
           })
           this.message = null;
       },
       fetchMessages(){
-        db.collection("users").get().then((querySnapshot) => {
+        db.collection("messages").orderBy("creationDate").onSnapshot((querySnapshot) => {
             let allMessages=[];
-            querySnapshot.forEach((doc) => {
-                allMessages.push(doc.data);
+            querySnapshot.forEach(doc => {
+                allMessages.push(doc.data());
+                console.log(allMessages);
             })
             this.messages=allMessages;
         })
     }
+    
   },
     
   created(){
+      firebase.auth().onAuthStateChanged(user=>{
+          if(user){
+              this.authUser=user;
+          }else{
+              this.authUser={};
+          }
+      })
       this.fetchMessages();
+  },
+
+
+  beforeRouteEnter(to, from, next){
+      next(vm=>{
+          firebase.auth().onAuthStateChanged(user=>{
+              if(user){
+                  next();
+              }else{
+                  vm.$router.push("/login");
+              }
+          })
+      })
   }
 }
 </script>

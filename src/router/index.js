@@ -1,11 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import FriendlyChat from '../views/FriendlyChat.vue'
+import Login from '../views/Login.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: FriendlyChat
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login
   },
   {
     path: '/about',
